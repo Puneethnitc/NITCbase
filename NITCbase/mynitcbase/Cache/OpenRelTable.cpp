@@ -189,14 +189,31 @@ OpenRelTable::~OpenRelTable()
       OpenRelTable::closeRel(i);
     }
   }
-  for (int i = 0; i <= ATTRCAT_RELID; i++)
+  if(RelCacheTable::relCache[ATTRCAT_RELID]->dirty==true)
   {
-    if (RelCacheTable::relCache[i] != nullptr)
-    {
-      free(RelCacheTable::relCache[i]);
-      RelCacheTable::relCache[i] = nullptr;
-    }
+    RelCatEntry relCatEntry;
+    RelCacheTable::getRelCatEntry(ATTRCAT_RELID,&relCatEntry);
+    Attribute record[RELCAT_NO_ATTRS];
+    RelCacheTable::relCatEntryToRecord(&relCatEntry,record);
+    RecBuffer relCatBlock(RelCacheTable::relCache[ATTRCAT_RELID]->recId.block);
+    relCatBlock.setRecord(record,RelCacheTable::relCache[ATTRCAT_RELID]->recId.slot);
   }
+ 
+      free(RelCacheTable::relCache[ATTRCAT_RELID]);
+      RelCacheTable::relCache[ATTRCAT_RELID] = nullptr;
+ 
+  if(RelCacheTable::relCache[RELCAT_RELID]->dirty==true)
+  {
+    RelCatEntry relCatEntry;
+    RelCacheTable::getRelCatEntry(RELCAT_RELID,&relCatEntry);
+    Attribute record[RELCAT_NO_ATTRS];
+    RelCacheTable::relCatEntryToRecord(&relCatEntry,record);
+
+    RecBuffer relCatBlock(RelCacheTable::relCache[RELCAT_RELID]->recId.block);
+    relCatBlock.setRecord(record,RelCacheTable::relCache[RELCAT_RELID]->recId.slot);
+  }
+  free(RelCacheTable::relCache[RELCAT_RELID]);
+  RelCacheTable::relCache[RELCAT_RELID]=nullptr;
 
   for (int i = 0; i <= ATTRCAT_RELID; i++)
   {
@@ -322,7 +339,7 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
 
     RecBuffer relCatBuffer(recId.block);
 
-    Attribute record[NO_OF_ATTRS_RELCAT_ATTRCAT];
+    Attribute record[RELCAT_NO_ATTRS];
     relCatBuffer.getRecord(record,recId.slot);
 
     RelCatEntry recordCatEntry;
@@ -346,7 +363,7 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
           break;
         }
         RecBuffer attrCatRecBuffer(attrCatRecordId.block);
-        Attribute attrRecord[NO_OF_ATTRS_RELCAT_ATTRCAT];
+        Attribute attrRecord[ATTRCAT_NO_ATTRS];
         attrCatRecBuffer.getRecord(attrRecord,attrCatRecordId.slot);
 
         AttrCacheEntry *temp=(AttrCacheEntry*)malloc(sizeof(AttrCacheEntry));
