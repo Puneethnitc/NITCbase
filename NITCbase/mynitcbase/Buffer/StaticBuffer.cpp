@@ -125,3 +125,13 @@ int StaticBuffer::setDirtyBit(int blockNum)
     metainfo[buffernum].dirty=true;
     return SUCCESS;
 }
+
+int StaticBuffer::getStaticBlockType(int blockNum)
+{
+    if(blockNum<0||blockNum>=DISK_BLOCKS)
+    return E_OUTOFBOUND;
+
+   int blockType=(int)blockAllocMap[blockNum];
+   return blockType;
+}
+

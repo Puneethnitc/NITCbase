@@ -69,6 +69,7 @@ OpenRelTable::OpenRelTable()
     temp->next = nullptr;
     temp->recId.block = ATTRCAT_BLOCK;
     temp->recId.slot = i;
+    temp->searchIndex={-1,-1};
     if (AttrCacheTable::attrCache[RELCAT_RELID] == nullptr)
     {
       (AttrCacheTable::attrCache[RELCAT_RELID]) = temp;
@@ -110,6 +111,7 @@ OpenRelTable::OpenRelTable()
     temp->next = nullptr;
     temp->recId.block = ATTRCAT_BLOCK;
     temp->recId.slot = i;
+    temp->searchIndex={-1,-1};
     if (AttrCacheTable::attrCache[ATTRCAT_RELID] == nullptr)
     {
       (AttrCacheTable::attrCache[ATTRCAT_RELID]) = temp;

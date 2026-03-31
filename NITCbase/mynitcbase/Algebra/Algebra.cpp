@@ -1,5 +1,5 @@
 #include "Algebra.h"
-
+#include "../counter.h"
 #include <cstring>
 #include<stdio.h>
 #include<cstdlib>
@@ -79,9 +79,10 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
       and return the error value returned from openRel() */
       Attribute record[src_nAttrs];
        RelCacheTable::resetSearchIndex(srcRelId);
+        AttrCacheTable::resetSearchIndex(srcRelId,attr);
     // AttrCacheTable::resetSearchIndex(srcRelId,attr);
   /*** Selecting records from the source relation ***/
-
+      comparisonCount=0;
   while(BlockAccess::search(srcRelId,record,attr,attrVal,op)==SUCCESS)
   {
     ret=BlockAccess::insert(targetRelId,record);
@@ -92,6 +93,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
       return ret;
     }
   }
+  printf("%d\n",comparisonCount);
   Schema::closeRel(targetRel);
  return SUCCESS;
 }
