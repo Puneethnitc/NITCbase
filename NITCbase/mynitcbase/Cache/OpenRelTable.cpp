@@ -276,17 +276,21 @@ int OpenRelTable::closeRel(int relId)
   free(RelCacheTable::relCache[relId]);
   RelCacheTable::relCache[relId]=nullptr;
 
- AttrCacheEntry* ptr=AttrCacheTable::attrCache[relId];
-  while(ptr)
-  {
-    AttrCacheEntry *temp=ptr;
-    ptr=ptr->next;
+  AttrCacheEntry* ptr = AttrCacheTable::attrCache[relId];
+  while (ptr) {
+    AttrCacheEntry *temp = ptr;
+    ptr = ptr->next;
+    if (temp->dirty) {
+      Attribute record[ATTRCAT_NO_ATTRS];
+      AttrCacheTable::attrCatEntryToRecord(&temp->attrCatEntry, record);
+      RecBuffer attrCatBuffer(temp->recId.block);
+      attrCatBuffer.setRecord(record, temp->recId.slot);
+    }
     free(temp);
-    temp=nullptr;
   }
-  AttrCacheTable::attrCache[relId]=nullptr;
-  tableMetaInfo[relId].free=FREE;
-  tableMetaInfo[relId].relName[0]='\0';
+  AttrCacheTable::attrCache[relId] = nullptr;
+  tableMetaInfo[relId].free = FREE;
+  tableMetaInfo[relId].relName[0] = '\0';
 
   return SUCCESS;
 }

@@ -67,7 +67,58 @@ void AttrCacheTable::recordToAttrCatEntry(union Attribute record[ATTRCAT_NO_ATTR
   // copy the rest of the fields in the record to the attrCacheEntry struct
 }
 
+void AttrCacheTable::attrCatEntryToRecord(AttrCatEntry *attrCatEntry, union Attribute record[ATTRCAT_NO_ATTRS]) {
+  strcpy(record[ATTRCAT_REL_NAME_INDEX].sVal, attrCatEntry->relName);
+  strcpy(record[ATTRCAT_ATTR_NAME_INDEX].sVal, attrCatEntry->attrName);
+  record[ATTRCAT_ATTR_TYPE_INDEX].nVal = attrCatEntry->attrType;
+  record[ATTRCAT_PRIMARY_FLAG_INDEX].nVal = attrCatEntry->primaryFlag;
+  record[ATTRCAT_ROOT_BLOCK_INDEX].nVal = attrCatEntry->rootBlock;
+  record[ATTRCAT_OFFSET_INDEX].nVal = attrCatEntry->offset;
+}
 
+int AttrCacheTable::setAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf) {
+  if (relId < 0 || relId >= MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+
+  if (attrCache[relId] == nullptr) {
+    return E_RELNOTOPEN;
+  }
+
+  AttrCacheEntry *entry = attrCache[relId];
+  while (entry != nullptr) {
+    if (strcmp(entry->attrCatEntry.attrName, attrName) == 0) {
+      entry->attrCatEntry = *attrCatBuf;
+      entry->dirty = true;
+      return SUCCESS;
+    }
+    entry = entry->next;
+  }
+
+  return E_ATTRNOTEXIST;
+}
+
+int AttrCacheTable::setAttrCatEntry(int relId, int attrOffset, AttrCatEntry *attrCatBuf) {
+  if (relId < 0 || relId >= MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+
+  if (attrCache[relId] == nullptr) {
+    return E_RELNOTOPEN;
+  }
+
+  AttrCacheEntry *entry = attrCache[relId];
+  while (entry != nullptr) {
+    if (entry->attrCatEntry.offset == attrOffset) {
+      entry->attrCatEntry = *attrCatBuf;
+      entry->dirty = true;
+      return SUCCESS;
+    }
+    entry = entry->next;
+  }
+
+  return E_ATTRNOTEXIST;
+}
 
 int AttrCacheTable::getSearchIndex(int relId,char attrName[ATTR_SIZE],IndexId *SearchIndex)
 { 
@@ -131,6 +182,7 @@ int AttrCacheTable::setSearchIndex(int relId,char attrName[ATTR_SIZE],IndexId *s
       attrCachePtr->searchIndex=*searchIndex;
       return SUCCESS;
     }
+    attrCachePtr=attrCachePtr->next;
   }
   return E_ATTRNOTEXIST;
 }
@@ -151,6 +203,7 @@ int AttrCacheTable::setSearchIndex(int relId,int attrOffset,IndexId *searchIndex
       attrCachePtr->searchIndex=*searchIndex;
       return SUCCESS;
     }
+    attrCachePtr=attrCachePtr->next;
   }
   return E_ATTRNOTEXIST;
 }
